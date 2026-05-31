@@ -3,6 +3,9 @@ package sistemapizzaria;
 import java.util.ArrayList;
 import java.util.List;
 
+import sistemapizzaria.cliente.*;
+import sistemapizzaria.pizza.*;
+
 public class SistemaPizzaria {
     private List<Cliente> clientes;
     private List<Sabor> saboresDisponiveis;

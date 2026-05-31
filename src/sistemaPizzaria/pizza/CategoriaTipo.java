@@ -1,4 +1,4 @@
-package sistemapizzaria;
+package sistemapizzaria.pizza;
 
 // Enumeração que define as três categorias obrigatórias de sabores de pizza.
 public enum CategoriaTipo {

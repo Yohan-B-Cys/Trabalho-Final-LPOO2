@@ -1,7 +1,9 @@
-package sistemapizzaria;
+package sistemapizzaria.cliente;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import sistemapizzaria.pizza.*;
 
 public class Pedido {
     private int identificador;

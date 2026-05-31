@@ -1,4 +1,6 @@
-package sistemapizzaria;
+package sistemapizzaria.formas;
+
+import sistemapizzaria.excecoes.*;
 
 public class Circulo extends Forma {
     private double raio;

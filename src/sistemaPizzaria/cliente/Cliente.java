@@ -1,4 +1,4 @@
-package sistemapizzaria;
+package sistemapizzaria.cliente;
 
 import java.util.ArrayList;
 import java.util.List;

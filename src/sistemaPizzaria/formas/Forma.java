@@ -1,4 +1,4 @@
-package sistemapizzaria;
+package sistemapizzaria.formas;
 
 public abstract class Forma {
     // Limites de área

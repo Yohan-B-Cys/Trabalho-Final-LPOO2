@@ -1,7 +1,10 @@
-package sistemapizzaria;
+package sistemapizzaria.pizza;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import sistemapizzaria.excecoes.*;
+import sistemapizzaria.formas.*;
 
 public class Pizza {    
     private Forma forma;

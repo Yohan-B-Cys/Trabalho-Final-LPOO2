@@ -1,4 +1,4 @@
-package sistemapizzaria;
+package sistemapizzaria.cliente;
 
 // Define os três estados possíveis de um pedido no sistema.
 public enum StatusPedido {

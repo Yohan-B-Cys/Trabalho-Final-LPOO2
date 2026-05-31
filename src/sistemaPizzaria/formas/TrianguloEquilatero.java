@@ -1,4 +1,6 @@
-package sistemapizzaria;
+package sistemapizzaria.formas;
+
+import sistemapizzaria.excecoes.*;
 
 public class TrianguloEquilatero extends Forma {
     private double lado;

@@ -1,4 +1,4 @@
-package sistemapizzaria;
+package sistemapizzaria.pizza;
 
 public class Sabor {  
     private String nome;
