@@ -73,7 +73,7 @@ local.properties
 nbproject/private/
 build/*
 nbbuild/
-dist/
+dist/*
 nbdist/
 nbactions.xml
 nb-configuration.xml
@@ -95,4 +95,4 @@ nb-configuration.xml
 *.log
 
 # Abrir exceção para o sistema da pizzaria
-!build/sistema_pizzaria.jar
+!dist/sistema-pizzaria.jar
