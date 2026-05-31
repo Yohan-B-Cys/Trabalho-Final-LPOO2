@@ -1,4 +1,4 @@
-package telas;
+package sistemapizzaria.telas;
 
 import java.awt.EventQueue;
 

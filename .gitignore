@@ -13,7 +13,7 @@ replay_pid*
 ##############################
 ## Javadoc
 ##############################
-# docs/
+docs/*
 
 ##############################
 ## Maven
@@ -96,3 +96,4 @@ nb-configuration.xml
 
 # Abrir exceção para o sistema da pizzaria
 !dist/sistema-pizzaria.jar
+!docs/projeto_especificacoes.pdf
