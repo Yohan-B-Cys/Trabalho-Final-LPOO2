@@ -1,5 +1,6 @@
 package sistemapizzaria;
 
+import sistemapizzaria.telas.TelaAtualizarPreco;
 import sistemapizzaria.telas.TelaClientes;
 
 public class Aplicacao {
@@ -9,8 +10,11 @@ public class Aplicacao {
 		SistemaPizzaria sistema = new SistemaPizzaria();
 		
 		// Exibe a tela inicial do sistema
-		TelaClientes telaInicial = new TelaClientes(sistema);
-		telaInicial.setVisible(true);
+
+		
+		TelaAtualizarPreco atualiza = new TelaAtualizarPreco(sistema);
+				atualiza.setVisible(true);
+		
 	}
 
 }
