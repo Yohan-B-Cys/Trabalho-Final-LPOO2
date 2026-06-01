@@ -1,7 +1,5 @@
 package sistemapizzaria.telas;
 
-import java.awt.EventQueue;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -12,6 +10,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Rectangle;
 import java.awt.Color;
+
+import sistemapizzaria.SistemaPizzaria;
 
 public class TelaClientes extends JFrame {
 
@@ -34,25 +34,9 @@ public class TelaClientes extends JFrame {
 	private JButton btnGerenciarPedidos;
 
 	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					TelaClientes frame = new TelaClientes();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-
-	/**
 	 * Create the frame.
 	 */
-	public TelaClientes() {
+	public TelaClientes(SistemaPizzaria sistema) {
 		setBounds(new Rectangle(1000, 1000, 1000, 1000));
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(1000, 1000, 1000, 1000);
