@@ -5,6 +5,12 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import sistemapizzaria.SistemaPizzaria;
+import sistemapizzaria.pizza.CategoriaTipo;
+import sistemapizzaria.pizza.Sabor;
+import sistemapizzaria.pizza.TipoPizza;
+
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.JComboBox;
@@ -12,34 +18,28 @@ import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JCheckBox;
+import javax.swing.JRadioButton;
+import javax.swing.ButtonGroup;
 
 public class CadastroSabor extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JTextField textField;
+	private final ButtonGroup buttonGroup = new ButtonGroup();
+	private SistemaPizzaria sistema;
 
 	/**
 	 * Launch the application.
 	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					CadastroSabor frame = new CadastroSabor();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+
 
 	/**
 	 * Create the frame.
 	 */
-	public CadastroSabor() {
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	public CadastroSabor(SistemaPizzaria sistema) {
+		this.sistema = sistema;
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 600, 300);
 		setTitle("Cadastro de Sabor");
 		contentPane = new JPanel();
@@ -56,45 +56,77 @@ public class CadastroSabor extends JFrame {
 		lblNomeDoSabor.setBounds(66, 88, 97, 17);
 		contentPane.add(lblNomeDoSabor);
 		
-		JLabel lblTipoDaPizza = new JLabel("Tipo da pizza:");
-		lblTipoDaPizza.setBounds(76, 147, 97, 17);
-		contentPane.add(lblTipoDaPizza);
-		
-		JButton btnCadastrarSabor = new JButton("Cadastrar Sabor");
-		btnCadastrarSabor.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-			}
-		});
-		btnCadastrarSabor.setBounds(194, 189, 214, 27);
-		contentPane.add(btnCadastrarSabor);
-		
-		JCheckBox chckbxNewCheckBox = new JCheckBox("Pizza Circular");
-		chckbxNewCheckBox.setBounds(178, 143, 114, 25);
-		contentPane.add(chckbxNewCheckBox);
-		
-		JCheckBox chckbxNewCheckBox_1 = new JCheckBox("Pizza Quadrada");
-		chckbxNewCheckBox_1.setBounds(294, 143, 127, 25);
-		contentPane.add(chckbxNewCheckBox_1);
-		
-		JCheckBox chckbxNewCheckBox_2 = new JCheckBox("Pizza Triangular\n");
-		chckbxNewCheckBox_2.setBounds(420, 143, 138, 25);
-		contentPane.add(chckbxNewCheckBox_2);
+	
 		
 		JLabel lblCategoria = new JLabel("Categoria:");
 		lblCategoria.setBounds(94, 118, 69, 17);
 		contentPane.add(lblCategoria);
 		
-		JCheckBox chckbxTradicional = new JCheckBox("Simples");
-		chckbxTradicional.setBounds(178, 114, 114, 25);
-		contentPane.add(chckbxTradicional);
+		JRadioButton rdbtnNewRadioButton = new JRadioButton("Simples\r\n");
+		buttonGroup.add(rdbtnNewRadioButton);
+		rdbtnNewRadioButton.setBounds(168, 115, 109, 23);
+		contentPane.add(rdbtnNewRadioButton);
 		
-		JCheckBox chckbxNewCheckBox_1_1 = new JCheckBox("Especial");
-		chckbxNewCheckBox_1_1.setBounds(294, 114, 127, 25);
-		contentPane.add(chckbxNewCheckBox_1_1);
+		JRadioButton rdbtnEspecial = new JRadioButton("Especial\r\n");
+		buttonGroup.add(rdbtnEspecial);
+		rdbtnEspecial.setBounds(280, 115, 109, 23);
+		contentPane.add(rdbtnEspecial);
 		
-		JCheckBox chckbxNewCheckBox_2_1 = new JCheckBox("Premium\n");
-		chckbxNewCheckBox_2_1.setBounds(420, 114, 138, 25);
-		contentPane.add(chckbxNewCheckBox_2_1);
+		JRadioButton rdbtnPremiun = new JRadioButton("Premium");
+		buttonGroup.add(rdbtnPremiun);
+		rdbtnPremiun.setBounds(391, 115, 109, 23);
+		contentPane.add(rdbtnPremiun);
+		
+		JButton btnCadastrarSabor = new JButton("Cadastrar Sabor");
+		btnCadastrarSabor.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				try {
+					String nome = textField.getText();
+					CategoriaTipo tipo ;
+					
+					
+					if (nome.trim().isEmpty()) {
+				        throw new Exception("O nome do sabor não pode estar vazio!");
+				    }
+					
+					if (rdbtnNewRadioButton.isSelected()) {
+						tipo = CategoriaTipo.SIMPLES;
+					} else if (rdbtnEspecial.isSelected()) {
+						tipo = CategoriaTipo.ESPECIAL;
+					} else if (rdbtnPremiun.isSelected()) {
+						tipo = CategoriaTipo.PREMIUM;
+					} else {
+						throw new Exception("Escolher categoria de Sabor é obrigatorio");
+					}
+				
+					
+					TipoPizza objetoTipo = null;
+					
+					for (TipoPizza tp : sistema.getTabelaPrecos()) {
+						if (tp.getCategoria() == tipo) {
+							objetoTipo = tp ;
+							break;
+						}
+					}
+					
+					Sabor saborCadastro = new Sabor(nome, objetoTipo);
+					
+					
+					sistema.cadastrarSabor(saborCadastro);
+					
+					javax.swing.JOptionPane.showMessageDialog(null, "Sabor '" + nome + "' cadastrado com sucesso!");
+					textField.setText("");
+
+					
+				} catch (Exception e2) {
+					javax.swing.JOptionPane.showMessageDialog(null, e2.getMessage(), "Aviso", javax.swing.JOptionPane.WARNING_MESSAGE);
+				}
+				
+			}
+		});
+		btnCadastrarSabor.setBounds(194, 189, 214, 27);
+		contentPane.add(btnCadastrarSabor);
 
 	}
 }

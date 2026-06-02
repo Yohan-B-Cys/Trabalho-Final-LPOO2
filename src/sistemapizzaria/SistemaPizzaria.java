@@ -98,6 +98,7 @@ public class SistemaPizzaria {
         // Retorna nulo caso a varredura termine sem encontrar um cliente com o telefone informado.
         return null;
     }
+    
 
     // Insere um novo sabor na coleção de sabores disponíveis, garantindo que o objeto passado seja válido.
     public void cadastrarSabor(Sabor s) {

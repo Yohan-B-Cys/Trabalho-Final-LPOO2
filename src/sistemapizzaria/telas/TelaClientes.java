@@ -11,6 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.Rectangle;
 import java.awt.Color;
 
+import sistemapizzaria.Aplicacao;
 import sistemapizzaria.SistemaPizzaria;
 
 public class TelaClientes extends JFrame {
@@ -32,6 +33,7 @@ public class TelaClientes extends JFrame {
 	private JLabel lblTelefoneNome;
 	private JButton btnEditarCliente;
 	private JButton btnGerenciarPedidos;
+	private SistemaPizzaria sistema;
 
 	/**
 	 * Create the frame.
@@ -39,7 +41,7 @@ public class TelaClientes extends JFrame {
 	public TelaClientes(SistemaPizzaria sistema) {
 		setBounds(new Rectangle(1000, 1000, 1000, 1000));
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(1000, 1000, 1000, 1000);
+		setLocationRelativeTo(null);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -58,6 +60,9 @@ public class TelaClientes extends JFrame {
 		btnNewButton.setBounds(629, 102, 145, 27);
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				TelaPedidos telaPedidos = new TelaPedidos();
+				telaPedidos.setVisible(true);
+				telaPedidos.setLocationRelativeTo(null);
 			}
 		});
 		contentPane.add(btnNewButton);
@@ -74,11 +79,22 @@ public class TelaClientes extends JFrame {
 		btnNewButton_1.setBounds(236, 24, 186, 27);
 		btnNewButton_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				CadastroSabor telaSabor = new CadastroSabor(sistema);
+				
+				telaSabor.setVisible(true);
+				telaSabor.setLocationRelativeTo(null);
 			}
 		});
 		contentPane.add(btnNewButton_1);
 		
 		btnAtualizarPreos = new JButton("Atualizar preços");
+		btnAtualizarPreos.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				TelaAtualizarPreco telaPreco = new TelaAtualizarPreco(sistema);
+				telaPreco.setVisible(true);
+				telaPreco.setLocationRelativeTo(null);
+			}
+		});
 		btnAtualizarPreos.setBounds(442, 24, 164, 27);
 		contentPane.add(btnAtualizarPreos);
 		
@@ -122,6 +138,14 @@ public class TelaClientes extends JFrame {
 		contentPane.add(txtSobrenome);
 		
 		btnPedidosDoCliente = new JButton("Pedidos do cliente");
+		btnPedidosDoCliente.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				TelaPedidos telaPedidos2 = new TelaPedidos();
+				telaPedidos2.setVisible(true);
+				telaPedidos2.setLocationRelativeTo(null);
+			}
+		});
 		btnPedidosDoCliente.setBounds(453, 303, 145, 27);
 		contentPane.add(btnPedidosDoCliente);
 		
@@ -130,12 +154,23 @@ public class TelaClientes extends JFrame {
 		contentPane.add(lblTelefoneNome);
 		
 		btnEditarCliente = new JButton("Editar Cliente");
-		btnEditarCliente.setBounds(610, 303, 145, 27);
+		btnEditarCliente.setBounds(608, 305, 145, 27);
 		contentPane.add(btnEditarCliente);
 		
 		btnGerenciarPedidos = new JButton("Gerenciar Pedidos\n");
+		btnGerenciarPedidos.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				TelaGerenciarPedidos telaPedidos = new TelaGerenciarPedidos();
+				telaPedidos.setVisible(true);
+				telaPedidos.setLocationRelativeTo(null);
+			}
+		});
 		btnGerenciarPedidos.setBounds(625, 24, 164, 27);
 		contentPane.add(btnGerenciarPedidos);
 
 	}
+	
+	
+	
 }

@@ -5,6 +5,9 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import sistemapizzaria.SistemaPizzaria;
+
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
@@ -21,6 +24,7 @@ public class TelaPedidos extends JFrame {
 	private JPanel contentPane;
 	private JTextField textField;
 	private JTextField textField_1;
+	private SistemaPizzaria sistema;
 
 	/**
 	 * Launch the application.
@@ -42,7 +46,7 @@ public class TelaPedidos extends JFrame {
 	 * Create the frame.
 	 */
 	public TelaPedidos() {
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 800, 900);
 		setTitle("Pedidos");
 		setLocationRelativeTo(null);
