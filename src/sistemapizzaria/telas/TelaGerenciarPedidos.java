@@ -1,5 +1,7 @@
 package sistemapizzaria.telas;
 
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -23,7 +25,10 @@ import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.JOptionPane;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
@@ -40,58 +45,45 @@ public class TelaGerenciarPedidos extends JFrame {
     private JComboBox<StatusPedido> comboNovoStatus;
 
     private SistemaPizzaria sistema;
-    private JScrollPane scroll;
 
     public TelaGerenciarPedidos(SistemaPizzaria sistema) {
         this.sistema = sistema;
 
         setTitle("Gerenciar Pedidos");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setBounds(100, 100, 1120, 700);
+        setMinimumSize(new Dimension(1000, 600));
         setLocationRelativeTo(null);
 
-        contentPane = new JPanel();
-        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+        contentPane = new JPanel(new BorderLayout(10, 10));
+        contentPane.setBorder(new EmptyBorder(10, 10, 10, 10));
         setContentPane(contentPane);
-        contentPane.setLayout(null);
 
         // ======================
-        // FILTRO STATUS
+        // PAINEL SUPERIOR (Filtros)
         // ======================
-        JLabel lblStatus = new JLabel("Filtrar por Status:");
-        lblStatus.setBounds(30, 20, 150, 20);
-        contentPane.add(lblStatus);
+        JPanel pnlNorte = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        pnlNorte.setBorder(BorderFactory.createTitledBorder("Filtros de Busca"));
 
+        pnlNorte.add(new JLabel("Filtrar por Status:"));
         comboFiltroStatus = new JComboBox<>();
         comboFiltroStatus.addItem(null); // Todos
         comboFiltroStatus.addItem(StatusPedido.ABERTO);
         comboFiltroStatus.addItem(StatusPedido.A_CAMINHO);
         comboFiltroStatus.addItem(StatusPedido.ENTREGUE);
-        comboFiltroStatus.setBounds(160, 20, 160, 25);
-        contentPane.add(comboFiltroStatus);
+        pnlNorte.add(comboFiltroStatus);
 
-        // ======================
-        // BUSCA TELEFONE
-        // ======================
-        JLabel lblBuscar = new JLabel("Telefone:");
-        lblBuscar.setBounds(30, 60, 100, 20);
-        contentPane.add(lblBuscar);
-
-        txtBusca = new JTextField();
-        txtBusca.setBounds(160, 60, 160, 25);
-        contentPane.add(txtBusca);
+        pnlNorte.add(new JLabel("Telefone:"));
+        txtBusca = new JTextField(15);
+        pnlNorte.add(txtBusca);
 
         JButton btnBuscar = new JButton("Pesquisar");
-        btnBuscar.setBounds(340, 60, 120, 25);
-        contentPane.add(btnBuscar);
+        pnlNorte.add(btnBuscar);
+        
+        contentPane.add(pnlNorte, BorderLayout.NORTH);
 
         // ======================
-        // TABELA
+        // TABELA (Centro)
         // ======================
-        scroll = new JScrollPane();
-        scroll.setBounds(30, 110, 1045, 330);
-        contentPane.add(scroll);
-
         modelo = new DefaultTableModel(
                 new Object[]{"ID", "Cliente", "Telefone", "Total", "Status", "Itens", "OBJ"}, 0
         ) {
@@ -104,162 +96,104 @@ public class TelaGerenciarPedidos extends JFrame {
         };
 
         tabela = new JTable(modelo);
-        scroll.setViewportView(tabela);
-
-        // tabela só para seleção
         tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabela.setRowHeight(78);
-
-        // MUITO IMPORTANTE:
-        // desliga o auto-resize para as larguras definidas serem respeitadas
         tabela.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-        // Renderer multiline na coluna Itens
         tabela.getColumnModel().getColumn(5).setCellRenderer(new TextAreaRenderer());
 
-        // esconder coluna OBJ
+        // Esconder a coluna OBJ
         tabela.getColumnModel().getColumn(6).setMinWidth(0);
         tabela.getColumnModel().getColumn(6).setMaxWidth(0);
         tabela.getColumnModel().getColumn(6).setPreferredWidth(0);
         tabela.getColumnModel().getColumn(6).setWidth(0);
 
-        // ======================
-        // AJUSTE DE LARGURA DAS COLUNAS
-        // ======================
-        // ID
+        // Larguras das colunas
         tabela.getColumnModel().getColumn(0).setPreferredWidth(70);
-        tabela.getColumnModel().getColumn(0).setMinWidth(70);
-        tabela.getColumnModel().getColumn(0).setMaxWidth(70);
-
-        // Cliente
         tabela.getColumnModel().getColumn(1).setPreferredWidth(110);
-        tabela.getColumnModel().getColumn(1).setMinWidth(110);
-        tabela.getColumnModel().getColumn(1).setMaxWidth(110);
-
-        // Telefone
         tabela.getColumnModel().getColumn(2).setPreferredWidth(110);
-        tabela.getColumnModel().getColumn(2).setMinWidth(110);
-        tabela.getColumnModel().getColumn(2).setMaxWidth(110);
-
-        // Total
         tabela.getColumnModel().getColumn(3).setPreferredWidth(90);
-        tabela.getColumnModel().getColumn(3).setMinWidth(90);
-        tabela.getColumnModel().getColumn(3).setMaxWidth(90);
-
-        // Status -> MAIS LARGA
         tabela.getColumnModel().getColumn(4).setPreferredWidth(150);
-        tabela.getColumnModel().getColumn(4).setMinWidth(150);
-        tabela.getColumnModel().getColumn(4).setMaxWidth(150);
-
-        // Itens -> cerca de 20% menor que os 700 anteriores
         tabela.getColumnModel().getColumn(5).setPreferredWidth(560);
-        tabela.getColumnModel().getColumn(5).setMinWidth(560);
+        
+        JScrollPane scroll = new JScrollPane(tabela);
+        contentPane.add(scroll, BorderLayout.CENTER);
 
         // ======================
-        // ALTERAR STATUS
+        // PAINEL INFERIOR (Alterar Status)
         // ======================
-        JLabel lblNovoStatus = new JLabel("Alterar Status:");
-        lblNovoStatus.setBounds(30, 470, 140, 20);
-        contentPane.add(lblNovoStatus);
+        JPanel pnlSul = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        pnlSul.setBorder(BorderFactory.createTitledBorder("Ações"));
 
+        pnlSul.add(new JLabel("Alterar Status para:"));
         comboNovoStatus = new JComboBox<>();
         comboNovoStatus.addItem(StatusPedido.ABERTO);
         comboNovoStatus.addItem(StatusPedido.A_CAMINHO);
         comboNovoStatus.addItem(StatusPedido.ENTREGUE);
-        comboNovoStatus.setBounds(160, 470, 160, 25);
-        contentPane.add(comboNovoStatus);
+        pnlSul.add(comboNovoStatus);
 
         JButton btnAtualizar = new JButton("Atualizar Pedido");
-        btnAtualizar.setBounds(340, 468, 180, 30);
-        contentPane.add(btnAtualizar);
+        pnlSul.add(btnAtualizar);
+        
+        contentPane.add(pnlSul, BorderLayout.SOUTH);
 
         // ======================
-        // EVENTO BUSCAR
+        // LÓGICA E EVENTOS
         // ======================
-        btnBuscar.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                atualizarTabela();
+        btnBuscar.addActionListener(e -> atualizarTabela());
+        txtBusca.addActionListener(e -> atualizarTabela());
+        comboFiltroStatus.addActionListener(e -> atualizarTabela());
+
+        tabela.getSelectionModel().addListSelectionListener(e -> {
+            if (e.getValueIsAdjusting()) return;
+            int linha = tabela.getSelectedRow();
+            if (linha == -1) return;
+
+            Pedido pedido = (Pedido) modelo.getValueAt(linha, 6);
+            if (pedido != null) {
+                comboNovoStatus.setSelectedItem(pedido.getStatus());
             }
         });
 
-        // Enter no campo telefone também pesquisa
-        txtBusca.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                atualizarTabela();
+        btnAtualizar.addActionListener(e -> {
+            int linha = tabela.getSelectedRow();
+            if (linha == -1) {
+                JOptionPane.showMessageDialog(null, "Selecione um pedido.");
+                return;
             }
-        });
 
-        // ======================
-        // EVENTO SELECIONAR LINHA
-        // ======================
-        tabela.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (e.getValueIsAdjusting()) return;
+            Pedido pedido = (Pedido) modelo.getValueAt(linha, 6);
+            StatusPedido novo = (StatusPedido) comboNovoStatus.getSelectedItem();
 
-                int linha = tabela.getSelectedRow();
-                if (linha == -1) return;
-
-                Pedido pedido = (Pedido) modelo.getValueAt(linha, 6);
-                if (pedido != null) {
-                    comboNovoStatus.setSelectedItem(pedido.getStatus());
-                }
+            if (pedido == null || novo == null) {
+                JOptionPane.showMessageDialog(null, "Não foi possível atualizar o pedido.");
+                return;
             }
+
+            pedido.atualizarStatus(novo);
+            atualizarTabela();
+            JOptionPane.showMessageDialog(null, "Status atualizado com sucesso!");
         });
-
-        // ======================
-        // EVENTO ATUALIZAR
-        // ======================
-        btnAtualizar.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-
-                int linha = tabela.getSelectedRow();
-
-                if (linha == -1) {
-                    JOptionPane.showMessageDialog(null, "Selecione um pedido.");
-                    return;
-                }
-
-                Pedido pedido = (Pedido) modelo.getValueAt(linha, 6);
-                StatusPedido novo = (StatusPedido) comboNovoStatus.getSelectedItem();
-
-                if (pedido == null || novo == null) {
-                    JOptionPane.showMessageDialog(null, "Não foi possível atualizar o pedido.");
-                    return;
-                }
-
-                pedido.atualizarStatus(novo);
-                atualizarTabela();
-
-                JOptionPane.showMessageDialog(null, "Status atualizado!");
-            }
-        });
+        
+        pack(); // Ajusta a janela ao conteúdo
     }
 
-    // ======================
-    // ATUALIZA TABELA
-    // ======================
     private void atualizarTabela() {
         modelo.setRowCount(0);
-
         if (sistema == null) return;
 
         String telefone = txtBusca.getText().trim();
         StatusPedido filtro = (StatusPedido) comboFiltroStatus.getSelectedItem();
 
         for (Cliente c : sistema.getClientes()) {
-
-            if (!telefone.isEmpty()
-                    && (c.getTelefone() == null || !c.getTelefone().contains(telefone))) {
+            if (!telefone.isEmpty() && (c.getTelefone() == null || !c.getTelefone().contains(telefone))) {
                 continue;
             }
 
             for (Pedido p : c.getPedidos()) {
-
                 if (filtro != null && p.getStatus() != filtro) {
                     continue;
                 }
-
                 modelo.addRow(new Object[]{
                         p.getIdentificador(),
                         c.getNome(),
@@ -273,67 +207,48 @@ public class TelaGerenciarPedidos extends JFrame {
         }
     }
 
-    // ======================
-    // TEXTO DOS ITENS
-    // ======================
     private String gerarItens(Pedido p) {
         StringBuilder sb = new StringBuilder();
-
         for (sistemapizzaria.pizza.Pizza pizza : p.getPizzas()) {
-
             String forma = obterNomeForma(pizza);
             double area = 0.0;
-
             try {
                 area = pizza.getForma().calcularArea();
             } catch (Exception e) {
                 area = 0.0;
             }
 
-            sb.append("Pizza ")
-              .append(forma)
-              .append(" ")
-              .append(String.format("%.0f cm²", area));
+            sb.append("Pizza ").append(forma).append(" ").append(String.format("%.0f cm²", area));
 
             java.util.List<sistemapizzaria.pizza.Sabor> sabores = pizza.getSabores();
             if (sabores != null && !sabores.isEmpty()) {
                 sb.append(" [");
-
                 for (int i = 0; i < sabores.size(); i++) {
                     sb.append(sabores.get(i).getNome());
                     if (i < sabores.size() - 1) {
                         sb.append(", ");
                     }
                 }
-
                 sb.append("]");
             }
-
             sb.append("\n");
         }
-
         return sb.toString().trim();
     }
 
     private String obterNomeForma(sistemapizzaria.pizza.Pizza pizza) {
         try {
             String classe = pizza.getForma().getClass().getSimpleName();
-
             if ("Circulo".equals(classe)) return "Círculo";
             if ("Quadrado".equals(classe)) return "Quadrado";
             if ("TrianguloEquilatero".equals(classe)) return "Triângulo";
-
             return classe;
         } catch (Exception e) {
             return "Forma";
         }
     }
 
-    // ======================
-    // RENDERER DE TEXTO MULTILINHA
-    // ======================
     class TextAreaRenderer extends JTextArea implements TableCellRenderer {
-
         private static final long serialVersionUID = 1L;
 
         public TextAreaRenderer() {
@@ -346,9 +261,7 @@ public class TelaGerenciarPedidos extends JFrame {
         public Component getTableCellRendererComponent(JTable table, Object value,
                                                        boolean isSelected, boolean hasFocus,
                                                        int row, int column) {
-
             setText(value == null ? "" : value.toString());
-
             if (isSelected) {
                 setBackground(table.getSelectionBackground());
                 setForeground(table.getSelectionForeground());
@@ -356,10 +269,8 @@ public class TelaGerenciarPedidos extends JFrame {
                 setBackground(table.getBackground());
                 setForeground(table.getForeground());
             }
-
             setFont(table.getFont());
             setBorder(null);
-
             return this;
         }
     }
@@ -368,5 +279,4 @@ public class TelaGerenciarPedidos extends JFrame {
         txtBusca.setText(telefone);
         atualizarTabela();
     }
-    
 }

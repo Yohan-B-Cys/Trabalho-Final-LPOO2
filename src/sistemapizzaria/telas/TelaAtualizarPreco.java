@@ -1,7 +1,11 @@
 package sistemapizzaria.telas;
 
-import java.awt.EventQueue;
-
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JButton;
@@ -11,6 +15,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
+import javax.swing.BorderFactory;
 
 import sistemapizzaria.pizza.CategoriaTipo;
 import sistemapizzaria.SistemaPizzaria;
@@ -34,55 +39,60 @@ public class TelaAtualizarPreco extends JFrame {
 		this.sistema = sistema;
 		
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setBounds(100, 100, 300, 300);
-		contentPane = new JPanel();
 		setTitle("Atualizar Preços");
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setMinimumSize(new Dimension(350, 250));
+		setLocationRelativeTo(null);
+		
+		contentPane = new JPanel(new BorderLayout());
+		contentPane.setBorder(new EmptyBorder(10, 10, 10, 10));
 		setContentPane(contentPane);
-		contentPane.setLayout(null);
 		
-		txtPrecoSimples = new JTextField();
-		txtPrecoSimples.setBounds(168, 77, 57, 21);
-		contentPane.add(txtPrecoSimples);
-		txtPrecoSimples.setColumns(10);
+		JPanel pnlForm = new JPanel(new GridBagLayout());
+		pnlForm.setBorder(BorderFactory.createTitledBorder("Tabela de Preços por cm²"));
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.insets = new Insets(10, 10, 10, 10);
+		gbc.anchor = GridBagConstraints.WEST;
 		
-		JLabel lblNewLabel_1 = new JLabel("Preço Sabor Simples :");
-		lblNewLabel_1.setBounds(22, 79, 128, 17);
-		contentPane.add(lblNewLabel_1);
+		// Simples
+		gbc.gridx = 0; gbc.gridy = 0;
+		pnlForm.add(new JLabel("Preço Sabor Simples:"), gbc);
 		
-		JLabel lblCms = new JLabel("cms2");
-		lblCms.setBounds(233, 79, 60, 17);
-		contentPane.add(lblCms);
+		txtPrecoSimples = new JTextField(8);
+		gbc.gridx = 1;
+		pnlForm.add(txtPrecoSimples, gbc);
 		
-		txtPrecoEspecial = new JTextField();
-		txtPrecoEspecial.setColumns(10);
-		txtPrecoEspecial.setBounds(168, 120, 57, 21);
-		contentPane.add(txtPrecoEspecial);
+		gbc.gridx = 2;
+		pnlForm.add(new JLabel("R$/cm²"), gbc);
 		
-		JLabel lblNewLabel_1_1 = new JLabel("Preço Sabor Especial:");
-		lblNewLabel_1_1.setBounds(22, 122, 138, 17);
-		contentPane.add(lblNewLabel_1_1);
+		// Especial
+		gbc.gridx = 0; gbc.gridy = 1;
+		pnlForm.add(new JLabel("Preço Sabor Especial:"), gbc);
 		
-		JLabel lblCms_1 = new JLabel("cms2");
-		lblCms_1.setBounds(233, 122, 60, 17);
-		contentPane.add(lblCms_1);
+		txtPrecoEspecial = new JTextField(8);
+		gbc.gridx = 1;
+		pnlForm.add(txtPrecoEspecial, gbc);
 		
-		txtPrecoPremium = new JTextField();
-		txtPrecoPremium.setColumns(10);
-		txtPrecoPremium.setBounds(168, 170, 57, 21);
-		contentPane.add(txtPrecoPremium);
+		gbc.gridx = 2;
+		pnlForm.add(new JLabel("R$/cm²"), gbc);
 		
-		JLabel lblNewLabel_1_2 = new JLabel("Preço Sabor Premium :");
-		lblNewLabel_1_2.setBounds(22, 172, 138, 17);
-		contentPane.add(lblNewLabel_1_2);
+		// Premium
+		gbc.gridx = 0; gbc.gridy = 2;
+		pnlForm.add(new JLabel("Preço Sabor Premium:"), gbc);
 		
-		JLabel lblCms_2 = new JLabel("cms2");
-		lblCms_2.setBounds(233, 172, 60, 17);
-		contentPane.add(lblCms_2);
+		txtPrecoPremium = new JTextField(8);
+		gbc.gridx = 1;
+		pnlForm.add(txtPrecoPremium, gbc);
 		
+		gbc.gridx = 2;
+		pnlForm.add(new JLabel("R$/cm²"), gbc);
+		
+		contentPane.add(pnlForm, BorderLayout.CENTER);
+		
+		// Botões
+		JPanel pnlBotoes = new JPanel(new FlowLayout(FlowLayout.CENTER));
 		JButton btnAtualizarValores = new JButton("Atualizar Valores");
-		btnAtualizarValores.setBounds(53, 223, 155, 27);
-		contentPane.add(btnAtualizarValores);
+		pnlBotoes.add(btnAtualizarValores);
+		contentPane.add(pnlBotoes, BorderLayout.SOUTH);
 		
 		// Carrega os valores iniciais do sistema para a tela
 		carregarPrecosAtuais();
@@ -109,6 +119,8 @@ public class TelaAtualizarPreco extends JFrame {
 				JOptionPane.showMessageDialog(null, ex.getMessage(), "Valor Inválido", JOptionPane.ERROR_MESSAGE);
 			}
 		});
+		
+		pack();
 	}
 	
 	// Varre a tabela de preços do sistema e preenche os campos de texto com os valores reais
