@@ -13,9 +13,9 @@ public abstract class Forma {
     // Calcula e retorna a área da forma geométrica instanciada utilizando as fórmulas matemáticas específicas de cada subclasse.
     public abstract double calcularArea();
 
-    // Configura as dimensões da forma com base no valor da área total fornecida, exigindo a aplicação de fórmulas matemáticas reversas.
+    // Configura as dimensões da forma com base no valor da área total fornecida.
     public abstract void definirPorArea(double area);
 
-    // Configura a medida da aresta (lado) ou do raio da forma geométrica a partir de uma dimensão linear fornecida.
+    // Configura a medida do lado ou do raio da forma geométrica a partir de uma dimensão linear fornecida.
     public abstract void definirPorDimensao(double dimensao);
 }

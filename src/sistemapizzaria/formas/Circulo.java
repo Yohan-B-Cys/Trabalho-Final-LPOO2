@@ -2,15 +2,11 @@ package sistemapizzaria.formas;
 
 import sistemapizzaria.excecoes.*;
 
-// Implementa a estrutura e o comportamento matemático de uma pizza com formato circular, estendendo o contrato da classe Forma.
 public class Circulo extends Forma {
     
-    // Armazena a medida do raio do círculo.
     private double raio;
-    
     // Estabelece o limite mínimo aceitável para o raio do círculo.
     public static final double MIN_RAIO = 7.0;
-    
     // Estabelece o limite máximo aceitável para o raio do círculo.
     public static final double MAX_RAIO = 23.0;
 
@@ -35,7 +31,6 @@ public class Circulo extends Forma {
             throw new AreaInvalidaException("A área da pizza deve ter entre 100 e 1600 cm².");
         }
         
-        // Calcula o raio isolando a variável na fórmula matemática da área do círculo.
         double raioCalculado = Math.sqrt(area / Math.PI);
         
         // Avalia se o raio resultante do cálculo se enquadra nas restrições específicas da forma circular.
@@ -44,14 +39,13 @@ public class Circulo extends Forma {
             throw new DimensaoInvalidaException("A área informada resulta em um raio fora dos limites do círculo (7 a 23 cm).");
         }
         
-        // Consolida a atribuição do raio após a aprovação em todas as validações de segurança.
+        // Atribui o valor validado ao atributo interno da classe.
         this.raio = raioCalculado;
     }
 
-    // Processa e devolve o valor da área atual do círculo utilizando a constante Pi e a potência do raio armazenado.
+    // Processa e devolve o valor da área atual do círculo
     @Override
     public double calcularArea() {
-        // Executa a fórmula matemática padrão da geometria plana para a área do círculo.
         return Math.PI * Math.pow(this.raio, 2);
     }
 
