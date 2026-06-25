@@ -97,3 +97,4 @@ nb-configuration.xml
 # Abrir exceção para o sistema da pizzaria
 !dist/sistema-pizzaria.jar
 !docs/projeto_especificacoes.pdf
+!docs/diagrama_classe.pdf
