@@ -25,6 +25,31 @@ public class Pedido {
         this.pizzas = new ArrayList<>();
     }
 
+    public Pedido(int identificador, double precoTotal, StatusPedido status) {
+        this.identificador = identificador;
+        this.precoTotal = precoTotal;
+        this.status = status != null ? status : StatusPedido.ABERTO;
+        this.pizzas = new ArrayList<>();
+        if (identificador >= contadorId) {
+            contadorId = identificador + 1;
+        }
+    }
+
+    public void setIdentificador(int identificador) {
+        this.identificador = identificador;
+        if (identificador >= contadorId) {
+            contadorId = identificador + 1;
+        }
+    }
+
+    public void setPizzas(List<Pizza> novasPizzas) {
+        this.pizzas.clear();
+        if (novasPizzas != null) {
+            this.pizzas.addAll(novasPizzas);
+        }
+        this.calcularPrecoTotal();
+    }
+
     public void adicionarPizza(Pizza pizza) {
         // Valida a consistência da referência recebida antes de processar a modificação da estrutura.
         if (pizza != null) {

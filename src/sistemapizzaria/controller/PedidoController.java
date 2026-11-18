@@ -1,0 +1,284 @@
+package sistemapizzaria.controller;
+
+import java.util.Collections;
+import java.util.List;
+
+import sistemapizzaria.cliente.Cliente;
+import sistemapizzaria.cliente.Pedido;
+import sistemapizzaria.cliente.StatusPedido;
+import sistemapizzaria.dao.ClienteDao;
+import sistemapizzaria.dao.DaoFactory;
+import sistemapizzaria.dao.PedidoDao;
+import sistemapizzaria.dao.SaborDao;
+import sistemapizzaria.model.CarrinhoPizzaTableModel;
+import sistemapizzaria.model.ClienteTableModel;
+import sistemapizzaria.model.PedidoTableModel;
+import sistemapizzaria.pizza.Pizza;
+import sistemapizzaria.pizza.Sabor;
+import sistemapizzaria.telas.TelaPedidos;
+
+/**
+ * Controlador responsável pela realização e edição de Pedidos de Pizzas (Padrão MVC - Aula 06).
+ */
+public class PedidoController {
+
+    private final TelaPedidos view;
+    private final ClienteTableModel modeloClientes;
+    private final PedidoTableModel modeloPedidos;
+    private final CarrinhoPizzaTableModel modeloCarrinho;
+
+    private final ClienteDao clienteDao;
+    private final PedidoDao pedidoDao;
+    private final SaborDao saborDao;
+
+    private Cliente clienteAtual;
+    private Pedido pedidoEmEdicao;
+    private Pedido pedidoEmAndamento;
+
+    public PedidoController(
+            TelaPedidos view,
+            ClienteTableModel modeloClientes,
+            PedidoTableModel modeloPedidos,
+            CarrinhoPizzaTableModel modeloCarrinho) {
+        this.view = view;
+        this.modeloClientes = modeloClientes;
+        this.modeloPedidos = modeloPedidos;
+        this.modeloCarrinho = modeloCarrinho;
+        this.clienteDao = DaoFactory.getClienteDao();
+        this.pedidoDao = DaoFactory.getPedidoDao();
+        this.saborDao = DaoFactory.getSaborDao();
+    }
+
+    public List<Sabor> listarSaboresDisponiveis() {
+        try {
+            return saborDao.getAll();
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public void buscarClientePorTelefone(String telefone) {
+        try {
+            String tel = (telefone != null) ? telefone.trim() : "";
+            if (tel.isEmpty()) {
+                modeloClientes.setListaClientes(Collections.emptyList());
+                modeloPedidos.setListaPedidos(Collections.emptyList());
+                clienteAtual = null;
+                return;
+            }
+            Cliente c = clienteDao.getByTelefone(tel);
+            if (c != null) {
+                modeloClientes.setListaClientes(Collections.singletonList(c));
+                view.selecionarPrimeiraLinhaCliente();
+            } else {
+                // Tenta busca parcial por telefone caso não encontre exato
+                List<Cliente> parciais = clienteDao.buscarPorSobrenomeETelefone("", tel);
+                if (!parciais.isEmpty()) {
+                    modeloClientes.setListaClientes(parciais);
+                    view.selecionarPrimeiraLinhaCliente();
+                } else {
+                    modeloClientes.setListaClientes(Collections.emptyList());
+                    modeloPedidos.setListaPedidos(Collections.emptyList());
+                    clienteAtual = null;
+                    view.ocultarPainelMontagemECarrinho();
+                    view.exibirAviso("Cliente não encontrado para o telefone informado.");
+                }
+            }
+        } catch (Exception e) {
+            view.exibirAviso("Erro ao buscar cliente: " + e.getMessage());
+        }
+    }
+
+    public void aoSelecionarClienteNaTabela(int linhaCliente) {
+        if (linhaCliente == -1) {
+            clienteAtual = null;
+            modeloPedidos.setListaPedidos(Collections.emptyList());
+            view.ocultarPainelMontagemECarrinho();
+            return;
+        }
+        try {
+            Cliente selecionado = modeloClientes.getCliente(linhaCliente);
+            if (selecionado == null) return;
+
+            // Recarrega cliente e seus pedidos do banco de dados
+            this.clienteAtual = clienteDao.getById(selecionado.getId());
+            if (this.clienteAtual == null) {
+                this.clienteAtual = selecionado;
+            }
+            List<Pedido> pedidos = this.clienteAtual.getPedidos();
+            modeloPedidos.setListaPedidos(pedidos);
+
+            // Requisito 2.b: Ao escolher o cliente, se já possuir pedido aberto, lista os itens para atualização;
+            // se não possuir pedido aberto, permite adicionar itens a um novo pedido.
+            Pedido aberto = this.clienteAtual.obterPedidoAberto();
+            if (aberto != null) {
+                int idxPedidoAberto = -1;
+                for (int i = 0; i < pedidos.size(); i++) {
+                    if (pedidos.get(i).getIdentificador() == aberto.getIdentificador()) {
+                        idxPedidoAberto = i;
+                        break;
+                    }
+                }
+                if (idxPedidoAberto != -1) {
+                    view.selecionarLinhaPedido(idxPedidoAberto);
+                    carregarPedidoParaEdicao(aberto);
+                }
+            } else {
+                iniciarNovoPedido();
+            }
+        } catch (Exception e) {
+            view.exibirAviso("Erro ao carregar pedidos do cliente: " + e.getMessage());
+        }
+    }
+
+    public void iniciarNovoPedido() {
+        if (clienteAtual == null) {
+            view.exibirAviso("Selecione um cliente primeiro.");
+            return;
+        }
+        this.pedidoEmEdicao = null;
+        this.pedidoEmAndamento = new Pedido();
+        atualizarCarrinhoNaView();
+        view.exibirPainelMontagemECarrinho(false, null);
+    }
+
+    public void editarPedidoSelecionado(int linhaPedido) {
+        if (clienteAtual == null || linhaPedido == -1) return;
+        Pedido p = modeloPedidos.getPedido(linhaPedido);
+        if (p == null) return;
+
+        if (p.getStatus() != StatusPedido.ABERTO) {
+            view.exibirAviso("Não é possível alterar um pedido que já está a caminho ou foi entregue.");
+            return;
+        }
+        carregarPedidoParaEdicao(p);
+    }
+
+    private void carregarPedidoParaEdicao(Pedido p) {
+        this.pedidoEmEdicao = p;
+        this.pedidoEmAndamento = new Pedido(p.getIdentificador(), p.getPrecoTotal(), p.getStatus());
+        for (Pizza pizza : p.getPizzas()) {
+            this.pedidoEmAndamento.adicionarPizza(pizza);
+        }
+        atualizarCarrinhoNaView();
+        Pizza primeiraPizza = p.getPizzas().isEmpty() ? null : p.getPizzas().get(0);
+        view.exibirPainelMontagemECarrinho(true, primeiraPizza);
+    }
+
+    public void excluirPedidoSelecionado(int linhaPedido) {
+        if (clienteAtual == null || linhaPedido == -1) return;
+        Pedido p = modeloPedidos.getPedido(linhaPedido);
+        if (p == null) return;
+
+        if (p.getStatus() != StatusPedido.ABERTO) {
+            view.exibirAviso("Não é possível excluir um pedido que já está a caminho ou foi entregue.");
+            return;
+        }
+
+        if (!view.confirmarAcao("Deseja realmente excluir o pedido #" + p.getIdentificador() + "?")) {
+            return;
+        }
+
+        try {
+            pedidoDao.delete(p.getIdentificador());
+            if (pedidoEmEdicao != null && pedidoEmEdicao.getIdentificador() == p.getIdentificador()) {
+                pedidoEmEdicao = null;
+                pedidoEmAndamento = null;
+                view.ocultarPainelMontagemECarrinho();
+            }
+            recarregarPedidosDoClienteAtual();
+            view.exibirSucesso("Pedido excluído com sucesso!");
+        } catch (Exception e) {
+            view.exibirAviso("Erro ao excluir pedido do banco de dados: " + e.getMessage());
+        }
+    }
+
+    public void adicionarPizzaAoCarrinho(Pizza novaPizza) {
+        if (pedidoEmAndamento == null) {
+            pedidoEmAndamento = new Pedido();
+        }
+        pedidoEmAndamento.adicionarPizza(novaPizza);
+        atualizarCarrinhoNaView();
+    }
+
+    public void editarPizzaDoCarrinho(int linhaCarrinho) {
+        if (linhaCarrinho == -1) {
+            view.exibirAviso("Selecione uma pizza no carrinho para editar.");
+            return;
+        }
+        if (pedidoEmAndamento != null) {
+            Pizza pizza = modeloCarrinho.getPizza(linhaCarrinho);
+            if (pizza != null) {
+                view.carregarPizzaNoPainelMontagem(pizza);
+                pedidoEmAndamento.removerPizza(pizza);
+                atualizarCarrinhoNaView();
+            }
+        }
+    }
+
+    public void removerPizzaDoCarrinho(int linhaCarrinho) {
+        if (linhaCarrinho == -1) {
+            view.exibirAviso("Selecione uma pizza no carrinho para remover.");
+            return;
+        }
+        if (pedidoEmAndamento != null) {
+            Pizza pizza = modeloCarrinho.getPizza(linhaCarrinho);
+            if (pizza != null) {
+                pedidoEmAndamento.removerPizza(pizza);
+                atualizarCarrinhoNaView();
+            }
+        }
+    }
+
+    public void finalizarOuSalvarPedido() {
+        if (clienteAtual == null) {
+            view.exibirAviso("Selecione um cliente primeiro.");
+            return;
+        }
+        if (pedidoEmAndamento == null || pedidoEmAndamento.getPizzas().isEmpty()) {
+            view.exibirAviso("Adicione pelo menos uma pizza ao pedido!");
+            return;
+        }
+
+        try {
+            if (pedidoEmEdicao != null) {
+                pedidoEmEdicao.setPizzas(pedidoEmAndamento.getPizzas());
+                pedidoDao.update(pedidoEmEdicao);
+                view.exibirSucesso("Pedido #" + pedidoEmEdicao.getIdentificador() + " atualizado com sucesso!");
+            } else {
+                pedidoDao.add(clienteAtual.getId(), pedidoEmAndamento);
+                view.exibirSucesso("Pedido #" + pedidoEmAndamento.getIdentificador() + " criado com sucesso!");
+            }
+
+            pedidoEmEdicao = null;
+            pedidoEmAndamento = null;
+            view.ocultarPainelMontagemECarrinho();
+            recarregarPedidosDoClienteAtual();
+        } catch (Exception e) {
+            view.exibirAviso("Erro ao salvar pedido no banco de dados: " + e.getMessage());
+        }
+    }
+
+    public Cliente getClienteAtual() {
+        return clienteAtual;
+    }
+
+    private void recarregarPedidosDoClienteAtual() throws Exception {
+        if (clienteAtual != null) {
+            clienteAtual = clienteDao.getById(clienteAtual.getId());
+            if (clienteAtual != null) {
+                modeloPedidos.setListaPedidos(clienteAtual.getPedidos());
+            }
+        }
+    }
+
+    private void atualizarCarrinhoNaView() {
+        if (pedidoEmAndamento == null) {
+            modeloCarrinho.setListaPizzas(Collections.emptyList());
+            view.atualizarLabelPrecoTotal(0.0);
+        } else {
+            modeloCarrinho.setListaPizzas(pedidoEmAndamento.getPizzas());
+            view.atualizarLabelPrecoTotal(pedidoEmAndamento.calcularPrecoTotal());
+        }
+    }
+}

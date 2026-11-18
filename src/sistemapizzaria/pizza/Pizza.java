@@ -8,11 +8,26 @@ import sistemapizzaria.formas.*;
 
 public class Pizza {    
     
+    private long id;
     private Forma forma;
     private List<Sabor> sabores;
 
     public Pizza() {
         this.sabores = new ArrayList<>();
+    }
+
+    public Pizza(long id, Forma forma) {
+        this.id = id;
+        this.forma = forma;
+        this.sabores = new ArrayList<>();
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public void adicionarSabor(Sabor sabor) {

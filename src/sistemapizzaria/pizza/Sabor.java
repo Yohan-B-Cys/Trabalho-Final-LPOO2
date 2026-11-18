@@ -2,12 +2,26 @@ package sistemapizzaria.pizza;
 
 public class Sabor {  
     
+    private long id;
     private String nome;
     private TipoPizza tipo;
 
     public Sabor(String nome, TipoPizza tipo) {
+        this(0L, nome, tipo);
+    }
+
+    public Sabor(long id, String nome, TipoPizza tipo) {
+        this.id = id;
         this.nome = nome;
         this.tipo = tipo;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public String getNome() {

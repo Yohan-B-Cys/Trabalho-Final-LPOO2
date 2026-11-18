@@ -5,6 +5,7 @@ import java.util.List;
 
 public class Cliente {
     
+    private long id;
     private String nome;
     private String sobrenome;
     private String telefone;
@@ -12,10 +13,23 @@ public class Cliente {
     private List<Pedido> pedidos;
 
     public Cliente(String nome, String sobrenome, String telefone) {
+        this(0L, nome, sobrenome, telefone);
+    }
+
+    public Cliente(long id, String nome, String sobrenome, String telefone) {
+        this.id = id;
         this.nome = nome;
         this.sobrenome = sobrenome;
         this.telefone = telefone;
         this.pedidos = new ArrayList<>();
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public void adicionarPedido(Pedido p) {
@@ -80,5 +94,12 @@ public class Cliente {
     // Retorna uma cópia exata da lista de pedidos para proteger a estrutura original contra modificações externas indevidas.
     public List<Pedido> getPedidos() {
         return new ArrayList<>(this.pedidos);
+    }
+
+    public void setPedidos(List<Pedido> novosPedidos) {
+        this.pedidos.clear();
+        if (novosPedidos != null) {
+            this.pedidos.addAll(novosPedidos);
+        }
     }
 }

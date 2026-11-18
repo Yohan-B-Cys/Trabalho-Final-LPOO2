@@ -1,37 +1,33 @@
 package sistemapizzaria.telas;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-
-import sistemapizzaria.SistemaPizzaria;
-import sistemapizzaria.cliente.Cliente;
-import sistemapizzaria.cliente.Pedido;
-import sistemapizzaria.cliente.StatusPedido;
-
-import javax.swing.JLabel;
-import javax.swing.JComboBox;
-import javax.swing.JButton;
-import javax.swing.JTextField;
-import javax.swing.JTable;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.ListSelectionModel;
-import javax.swing.JOptionPane;
-
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.TableCellRenderer;
 
+import sistemapizzaria.SistemaPizzaria;
+import sistemapizzaria.cliente.Pedido;
+import sistemapizzaria.cliente.StatusPedido;
+import sistemapizzaria.controller.GerenciarPedidosController;
+import sistemapizzaria.model.GerenciarPedidosTableModel;
+
+/**
+ * View responsável pela visualização de todos os pedidos e alteração de seus estados (Padrão MVC - Aula 06).
+ */
 public class TelaGerenciarPedidos extends JFrame {
 
     private static final long serialVersionUID = 1L;
@@ -39,15 +35,15 @@ public class TelaGerenciarPedidos extends JFrame {
     private JPanel contentPane;
     private JTextField txtBusca;
     private JTable tabela;
-    private DefaultTableModel modelo;
+    private final GerenciarPedidosTableModel modelo;
+    private final GerenciarPedidosController controller;
 
     private JComboBox<StatusPedido> comboFiltroStatus;
     private JComboBox<StatusPedido> comboNovoStatus;
 
-    private SistemaPizzaria sistema;
-
-    public TelaGerenciarPedidos(SistemaPizzaria sistema) {
-        this.sistema = sistema;
+    public TelaGerenciarPedidos() {
+        this.modelo = new GerenciarPedidosTableModel();
+        this.controller = new GerenciarPedidosController(this, this.modelo);
 
         setTitle("Gerenciar Pedidos");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -78,23 +74,12 @@ public class TelaGerenciarPedidos extends JFrame {
 
         JButton btnBuscar = new JButton("Pesquisar");
         pnlNorte.add(btnBuscar);
-        
+
         contentPane.add(pnlNorte, BorderLayout.NORTH);
 
         // ======================
         // TABELA (Centro)
         // ======================
-        modelo = new DefaultTableModel(
-                new Object[]{"ID", "Cliente", "Telefone", "Total", "Status", "Itens", "OBJ"}, 0
-        ) {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-
         tabela = new JTable(modelo);
         tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabela.setRowHeight(78);
@@ -102,20 +87,14 @@ public class TelaGerenciarPedidos extends JFrame {
 
         tabela.getColumnModel().getColumn(5).setCellRenderer(new TextAreaRenderer());
 
-        // Esconder a coluna OBJ
-        tabela.getColumnModel().getColumn(6).setMinWidth(0);
-        tabela.getColumnModel().getColumn(6).setMaxWidth(0);
-        tabela.getColumnModel().getColumn(6).setPreferredWidth(0);
-        tabela.getColumnModel().getColumn(6).setWidth(0);
-
         // Larguras das colunas
         tabela.getColumnModel().getColumn(0).setPreferredWidth(70);
-        tabela.getColumnModel().getColumn(1).setPreferredWidth(110);
-        tabela.getColumnModel().getColumn(2).setPreferredWidth(110);
-        tabela.getColumnModel().getColumn(3).setPreferredWidth(90);
-        tabela.getColumnModel().getColumn(4).setPreferredWidth(150);
-        tabela.getColumnModel().getColumn(5).setPreferredWidth(560);
-        
+        tabela.getColumnModel().getColumn(1).setPreferredWidth(150);
+        tabela.getColumnModel().getColumn(2).setPreferredWidth(120);
+        tabela.getColumnModel().getColumn(3).setPreferredWidth(100);
+        tabela.getColumnModel().getColumn(4).setPreferredWidth(130);
+        tabela.getColumnModel().getColumn(5).setPreferredWidth(540);
+
         JScrollPane scroll = new JScrollPane(tabela);
         contentPane.add(scroll, BorderLayout.CENTER);
 
@@ -134,11 +113,11 @@ public class TelaGerenciarPedidos extends JFrame {
 
         JButton btnAtualizar = new JButton("Atualizar Pedido");
         pnlSul.add(btnAtualizar);
-        
+
         contentPane.add(pnlSul, BorderLayout.SOUTH);
 
         // ======================
-        // LÓGICA E EVENTOS
+        // EVENTOS -> CONTROLLER
         // ======================
         btnBuscar.addActionListener(e -> atualizarTabela());
         txtBusca.addActionListener(e -> atualizarTabela());
@@ -149,106 +128,50 @@ public class TelaGerenciarPedidos extends JFrame {
             int linha = tabela.getSelectedRow();
             if (linha == -1) return;
 
-            Pedido pedido = (Pedido) modelo.getValueAt(linha, 6);
+            Pedido pedido = modelo.getPedido(linha);
             if (pedido != null) {
                 comboNovoStatus.setSelectedItem(pedido.getStatus());
             }
         });
 
         btnAtualizar.addActionListener(e -> {
-            int linha = tabela.getSelectedRow();
-            if (linha == -1) {
-                JOptionPane.showMessageDialog(null, "Selecione um pedido.");
-                return;
-            }
-
-            Pedido pedido = (Pedido) modelo.getValueAt(linha, 6);
-            StatusPedido novo = (StatusPedido) comboNovoStatus.getSelectedItem();
-
-            if (pedido == null || novo == null) {
-                JOptionPane.showMessageDialog(null, "Não foi possível atualizar o pedido.");
-                return;
-            }
-
-            pedido.atualizarStatus(novo);
-            atualizarTabela();
-            JOptionPane.showMessageDialog(null, "Status atualizado com sucesso!");
+            controller.alterarStatusPedido(
+                tabela.getSelectedRow(),
+                (StatusPedido) comboNovoStatus.getSelectedItem(),
+                txtBusca.getText(),
+                (StatusPedido) comboFiltroStatus.getSelectedItem()
+            );
         });
-        
-        pack(); // Ajusta a janela ao conteúdo
+
+        atualizarTabela();
+        pack();
     }
 
-    private void atualizarTabela() {
-        modelo.setRowCount(0);
-        if (sistema == null) return;
-
-        String telefone = txtBusca.getText().trim();
-        StatusPedido filtro = (StatusPedido) comboFiltroStatus.getSelectedItem();
-
-        for (Cliente c : sistema.getClientes()) {
-            if (!telefone.isEmpty() && (c.getTelefone() == null || !c.getTelefone().contains(telefone))) {
-                continue;
-            }
-
-            for (Pedido p : c.getPedidos()) {
-                if (filtro != null && p.getStatus() != filtro) {
-                    continue;
-                }
-                modelo.addRow(new Object[]{
-                        p.getIdentificador(),
-                        c.getNome(),
-                        c.getTelefone(),
-                        String.format("R$ %.2f", p.getPrecoTotal()),
-                        p.getStatus(),
-                        gerarItens(p),
-                        p
-                });
-            }
-        }
+    public TelaGerenciarPedidos(SistemaPizzaria sistema) {
+        this();
     }
 
-    private String gerarItens(Pedido p) {
-        StringBuilder sb = new StringBuilder();
-        for (sistemapizzaria.pizza.Pizza pizza : p.getPizzas()) {
-            String forma = obterNomeForma(pizza);
-            double area = 0.0;
-            try {
-                area = pizza.getForma().calcularArea();
-            } catch (Exception e) {
-                area = 0.0;
-            }
-
-            sb.append("Pizza ").append(forma).append(" ").append(String.format("%.0f cm²", area));
-
-            java.util.List<sistemapizzaria.pizza.Sabor> sabores = pizza.getSabores();
-            if (sabores != null && !sabores.isEmpty()) {
-                sb.append(" [");
-                for (int i = 0; i < sabores.size(); i++) {
-                    sb.append(sabores.get(i).getNome());
-                    if (i < sabores.size() - 1) {
-                        sb.append(", ");
-                    }
-                }
-                sb.append("]");
-            }
-            sb.append("\n");
-        }
-        return sb.toString().trim();
+    public void atualizarTabela() {
+        controller.atualizarTabela(
+            txtBusca.getText(),
+            (StatusPedido) comboFiltroStatus.getSelectedItem()
+        );
     }
 
-    private String obterNomeForma(sistemapizzaria.pizza.Pizza pizza) {
-        try {
-            String classe = pizza.getForma().getClass().getSimpleName();
-            if ("Circulo".equals(classe)) return "Círculo";
-            if ("Quadrado".equals(classe)) return "Quadrado";
-            if ("TrianguloEquilatero".equals(classe)) return "Triângulo";
-            return classe;
-        } catch (Exception e) {
-            return "Forma";
-        }
+    public void abrirComCliente(String telefone) {
+        txtBusca.setText(telefone);
+        atualizarTabela();
     }
 
-    class TextAreaRenderer extends JTextArea implements TableCellRenderer {
+    public void exibirSucesso(String mensagem) {
+        JOptionPane.showMessageDialog(this, mensagem, "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public void exibirAviso(String mensagem) {
+        JOptionPane.showMessageDialog(this, mensagem, "Aviso", JOptionPane.WARNING_MESSAGE);
+    }
+
+    static class TextAreaRenderer extends JTextArea implements TableCellRenderer {
         private static final long serialVersionUID = 1L;
 
         public TextAreaRenderer() {
@@ -273,10 +196,5 @@ public class TelaGerenciarPedidos extends JFrame {
             setBorder(null);
             return this;
         }
-    }
-    
-    public void abrirComCliente(String telefone) {
-        txtBusca.setText(telefone);
-        atualizarTabela();
     }
 }

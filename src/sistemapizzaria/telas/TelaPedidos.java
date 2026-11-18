@@ -24,45 +24,50 @@ import javax.swing.border.EmptyBorder;
 
 import sistemapizzaria.SistemaPizzaria;
 import sistemapizzaria.cliente.Cliente;
-import sistemapizzaria.cliente.Pedido;
-import sistemapizzaria.cliente.StatusPedido;
+import sistemapizzaria.controller.PedidoController;
+import sistemapizzaria.model.CarrinhoPizzaTableModel;
+import sistemapizzaria.model.ClienteTableModel;
+import sistemapizzaria.model.PedidoTableModel;
 import sistemapizzaria.pizza.Pizza;
 
+/**
+ * View responsável pela realização e edição de Pedidos de Pizzas (Padrão MVC - Aula 06).
+ */
 public class TelaPedidos extends JFrame {
 
     private static final long serialVersionUID = 1L;
     private JPanel contentPane;
-    
+
     // UI Busca Clientes
     private JTextField txtBusca;
     private JTable tabelaClientesBusca;
-    private javax.swing.table.DefaultTableModel modeloTabelaClientes;
-    
+    private final ClienteTableModel modeloTabelaClientes;
+
     // UI Histórico Pedidos
     private JTable tabelaPedidos;
-    private javax.swing.table.DefaultTableModel modeloTabelaPedidos;
+    private final PedidoTableModel modeloTabelaPedidos;
     private JButton btnEditarPedido;
     private JButton btnExcluirPedido;
-    
+
     // UI Carrinho
+    private JPanel pnlCarrinho;
     private JTable tabelaCarrinho;
-    private javax.swing.table.DefaultTableModel modeloCarrinho;
+    private final CarrinhoPizzaTableModel modeloCarrinho;
     private JLabel lblPrecoTotal;
     private JButton btnFinalizarSalvar;
-    
+
     // Painel Extraído
     private PainelMontagemPizza painelPizza;
-    
-    // Estado do Pedido
-    private Pedido pedidoEmEdicao;
-    private Pedido pedidoEmAndamento;
 
-    private SistemaPizzaria sistema;
-    private TelaClientes telaClientesRef;
+    private final PedidoController controller;
+    private final TelaClientes telaClientesRef;
 
-    public TelaPedidos(SistemaPizzaria sistema, TelaClientes telaClientes) {
-        this.sistema = sistema;
+    public TelaPedidos(TelaClientes telaClientes) {
         this.telaClientesRef = telaClientes;
+        this.modeloTabelaClientes = new ClienteTableModel();
+        this.modeloTabelaPedidos = new PedidoTableModel();
+        this.modeloCarrinho = new CarrinhoPizzaTableModel();
+        this.controller = new PedidoController(this, modeloTabelaClientes, modeloTabelaPedidos, modeloCarrinho);
 
         setTitle("Pedidos de Clientes");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -73,7 +78,6 @@ public class TelaPedidos extends JFrame {
         contentPane.setBorder(new EmptyBorder(10, 10, 10, 10));
         setContentPane(contentPane);
 
-        // Painel Principal que terá Scroll
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         JScrollPane mainScroll = new JScrollPane(mainPanel);
@@ -93,11 +97,6 @@ public class TelaPedidos extends JFrame {
         pnlBuscaTop.add(btnBuscar);
         pnlBuscaWrapper.add(pnlBuscaTop, BorderLayout.NORTH);
 
-        String[] colunasBusca = {"Telefone", "Nome", "Sobrenome"};
-        modeloTabelaClientes = new javax.swing.table.DefaultTableModel(null, colunasBusca) {
-            @Override
-            public boolean isCellEditable(int row, int column) { return false; }
-        };
         tabelaClientesBusca = new JTable(modeloTabelaClientes);
         tabelaClientesBusca.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane scrollPaneBusca = new JScrollPane(tabelaClientesBusca);
@@ -110,16 +109,11 @@ public class TelaPedidos extends JFrame {
         pnlPedidosWrapper.setBorder(BorderFactory.createTitledBorder("Histórico de Pedidos"));
         pnlPedidosWrapper.setPreferredSize(new Dimension(750, 150));
 
-        String[] colunasPedido = {"ID do Pedido", "Qtd. Pizzas", "Preço Total", "Status"};
-        modeloTabelaPedidos = new javax.swing.table.DefaultTableModel(null, colunasPedido) {
-            @Override
-            public boolean isCellEditable(int row, int column) { return false; }
-        };
         tabelaPedidos = new JTable(modeloTabelaPedidos);
         tabelaPedidos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane scrollPanePedidos = new JScrollPane(tabelaPedidos);
         pnlPedidosWrapper.add(scrollPanePedidos, BorderLayout.CENTER);
-        
+
         JPanel pnlAcoesPedido = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton btnAdicionarPedido = new JButton("Adicionar Novo Pedido");
         btnEditarPedido = new JButton("Editar Pedido Selecionado");
@@ -129,39 +123,30 @@ public class TelaPedidos extends JFrame {
         btnEditarPedido.setVisible(false);
         btnExcluirPedido.setVisible(false);
         btnExcluirPedido.setForeground(Color.WHITE);
-        btnExcluirPedido.setBackground(new Color(220, 53, 69)); // Vermelho Bootstrap
+        btnExcluirPedido.setBackground(new Color(220, 53, 69));
 
         pnlAcoesPedido.add(btnAdicionarPedido);
         pnlAcoesPedido.add(btnEditarPedido);
         pnlAcoesPedido.add(btnExcluirPedido);
         pnlAcoesPedido.add(btnGerenciarPedidos);
         pnlPedidosWrapper.add(pnlAcoesPedido, BorderLayout.SOUTH);
-        
+
         mainPanel.add(pnlPedidosWrapper);
         mainPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        // 3. PAINEL DE MONTAGEM DE PIZZA (Componentizado)
-        painelPizza = new PainelMontagemPizza(sistema, novaPizza -> {
-            if (pedidoEmAndamento == null) {
-                pedidoEmAndamento = new Pedido();
-            }
-            pedidoEmAndamento.adicionarPizza(novaPizza);
-            atualizarCarrinho();
+        // 3. PAINEL DE MONTAGEM DE PIZZA
+        painelPizza = new PainelMontagemPizza(novaPizza -> {
+            controller.adicionarPizzaAoCarrinho(novaPizza);
         });
         painelPizza.setVisible(false);
         mainPanel.add(painelPizza);
         mainPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         // 4. CARRINHO DE COMPRAS
-        JPanel pnlCarrinho = new JPanel(new BorderLayout());
+        pnlCarrinho = new JPanel(new BorderLayout());
         pnlCarrinho.setBorder(BorderFactory.createTitledBorder("Carrinho de Pizzas"));
         pnlCarrinho.setPreferredSize(new Dimension(750, 150));
-        
-        String[] colunasCarrinho = {"Forma", "Área", "Sabores", "Preço da Pizza"};
-        modeloCarrinho = new javax.swing.table.DefaultTableModel(null, colunasCarrinho) {
-            @Override
-            public boolean isCellEditable(int row, int column) { return false; }
-        };
+
         tabelaCarrinho = new JTable(modeloCarrinho);
         pnlCarrinho.add(new JScrollPane(tabelaCarrinho), BorderLayout.CENTER);
 
@@ -173,13 +158,13 @@ public class TelaPedidos extends JFrame {
         JButton btnEditarPizza = new JButton("Editar Pizza");
         pnlAcoesCarrinho.add(btnEditarPizza);
         pnlAcoesCarrinho.add(btnRemoverDaLista);
-        
+
         JPanel pnlTotal = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         lblPrecoTotal = new JLabel("Preço Total: R$ 0,00");
         btnFinalizarSalvar = new JButton("Finalizar Pedido");
         pnlTotal.add(lblPrecoTotal);
         pnlTotal.add(btnFinalizarSalvar);
-        
+
         pnlCarrinhoBottom.add(pnlAcoesCarrinho, BorderLayout.WEST);
         pnlCarrinhoBottom.add(pnlTotal, BorderLayout.EAST);
         pnlCarrinho.add(pnlCarrinhoBottom, BorderLayout.SOUTH);
@@ -188,9 +173,8 @@ public class TelaPedidos extends JFrame {
         mainPanel.add(pnlCarrinho);
 
         // ======================================
-        // LÓGICA DE EVENTOS DA TELA
+        // EVENTOS DA VIEW -> CONTROLLER
         // ======================================
-        
         txtBusca.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -198,22 +182,13 @@ public class TelaPedidos extends JFrame {
             }
         });
 
-        Runnable buscarAcao = () -> {
-            modeloTabelaClientes.setRowCount(0);
-            Cliente c = TelaPedidos.this.sistema.buscarClientePorTelefone(txtBusca.getText());
-            if (c != null) {
-                modeloTabelaClientes.addRow(new Object[]{c.getTelefone(), c.getNome(), c.getSobrenome()});
-                tabelaClientesBusca.setRowSelectionInterval(0, 0);
-            } else if (!txtBusca.getText().isEmpty()) {
-                JOptionPane.showMessageDialog(null, "Cliente não encontrado.");
-            }
-        };
-
-        btnBuscar.addActionListener(e -> buscarAcao.run());
-        txtBusca.addActionListener(e -> buscarAcao.run());
+        btnBuscar.addActionListener(e -> controller.buscarClientePorTelefone(txtBusca.getText()));
+        txtBusca.addActionListener(e -> controller.buscarClientePorTelefone(txtBusca.getText()));
 
         tabelaClientesBusca.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) atualizarTabelaPedidos();
+            if (!e.getValueIsAdjusting()) {
+                controller.aoSelecionarClienteNaTabela(tabelaClientesBusca.getSelectedRow());
+            }
         });
 
         tabelaPedidos.getSelectionModel().addListSelectionListener(e -> {
@@ -224,146 +199,22 @@ public class TelaPedidos extends JFrame {
             }
         });
 
-        btnAdicionarPedido.addActionListener(e -> {
-            if (tabelaClientesBusca.getSelectedRow() == -1) {
-                JOptionPane.showMessageDialog(null, "Selecione um cliente primeiro.");
-                return;
-            }
-            pedidoEmEdicao = null;
-            pedidoEmAndamento = new Pedido();
-            btnFinalizarSalvar.setText("Finalizar Pedido");
-            painelPizza.limparFormulario();
-            atualizarCarrinho();
-            painelPizza.setVisible(true);
-            pnlCarrinho.setVisible(true);
-            contentPane.revalidate();
-        });
-
-        btnEditarPedido.addActionListener(e -> {
-            int linhaP = tabelaPedidos.getSelectedRow();
-            int linhaC = tabelaClientesBusca.getSelectedRow();
-            if (linhaP == -1 || linhaC == -1) return;
-
-            Cliente c = sistema.buscarClientePorTelefone(modeloTabelaClientes.getValueAt(linhaC, 0).toString());
-            Pedido p = c.getPedidos().get(linhaP);
-
-            if (p.getStatus() != StatusPedido.ABERTO) {
-                JOptionPane.showMessageDialog(null, "Não é possível alterar um pedido que já está a caminho ou foi entregue.", "Aviso", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            pedidoEmEdicao = p;
-            pedidoEmAndamento = new Pedido(); // Cria um clone temporário para edição
-            for (Pizza pizza : p.getPizzas()) {
-                pedidoEmAndamento.adicionarPizza(pizza);
-            }
-            
-            btnFinalizarSalvar.setText("Salvar Alterações");
-            atualizarCarrinho();
-            painelPizza.setVisible(true);
-            pnlCarrinho.setVisible(true);
-            
-            // Carrega a primeira pizza no formulário como conveniência
-            if (!p.getPizzas().isEmpty()) {
-                painelPizza.carregarPizzaParaEdicao(p.getPizzas().get(0));
-            }
-            contentPane.revalidate();
-        });
-
-        btnExcluirPedido.addActionListener(e -> {
-            int linhaP = tabelaPedidos.getSelectedRow();
-            int linhaC = tabelaClientesBusca.getSelectedRow();
-            if (linhaP == -1 || linhaC == -1) return;
-
-            int confirm = JOptionPane.showConfirmDialog(null, "Excluir este pedido?", "Confirmar", JOptionPane.YES_NO_OPTION);
-            if (confirm != JOptionPane.YES_OPTION) return;
-
-            Cliente c = sistema.buscarClientePorTelefone(modeloTabelaClientes.getValueAt(linhaC, 0).toString());
-            Pedido p = c.getPedidos().get(linhaP);
-
-            if (p.getStatus() != StatusPedido.ABERTO) {
-                JOptionPane.showMessageDialog(null, "Não é possível excluir um pedido que já está a caminho ou foi entregue.", "Aviso", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            c.removerPedido(p);
-            if (pedidoEmEdicao == p) {
-                pedidoEmEdicao = null;
-                pedidoEmAndamento = null;
-                painelPizza.setVisible(false);
-                pnlCarrinho.setVisible(false);
-            }
-            atualizarTabelaPedidos();
-            JOptionPane.showMessageDialog(null, "Pedido excluído!");
-        });
+        btnAdicionarPedido.addActionListener(e -> controller.iniciarNovoPedido());
+        btnEditarPedido.addActionListener(e -> controller.editarPedidoSelecionado(tabelaPedidos.getSelectedRow()));
+        btnExcluirPedido.addActionListener(e -> controller.excluirPedidoSelecionado(tabelaPedidos.getSelectedRow()));
 
         btnGerenciarPedidos.addActionListener(e -> {
-            TelaGerenciarPedidos gerenciar = new TelaGerenciarPedidos(sistema);
-            int linhaC = tabelaClientesBusca.getSelectedRow();
-            if (linhaC != -1) {
-                String tel = modeloTabelaClientes.getValueAt(linhaC, 0).toString();
-                gerenciar.abrirComCliente(tel);
+            TelaGerenciarPedidos gerenciar = new TelaGerenciarPedidos();
+            Cliente c = controller.getClienteAtual();
+            if (c != null) {
+                gerenciar.abrirComCliente(c.getTelefone());
             }
             gerenciar.setVisible(true);
         });
 
-        btnEditarPizza.addActionListener(e -> {
-            int row = tabelaCarrinho.getSelectedRow();
-            if (row == -1) {
-                JOptionPane.showMessageDialog(null, "Selecione uma pizza na tabela para editar.");
-                return;
-            }
-            if (pedidoEmAndamento != null && row < pedidoEmAndamento.getPizzas().size()) {
-                Pizza p = pedidoEmAndamento.getPizzas().get(row);
-                painelPizza.carregarPizzaParaEdicao(p);
-                pedidoEmAndamento.removerPizza(p);
-                atualizarCarrinho();
-            }
-        });
-
-        btnRemoverDaLista.addActionListener(e -> {
-            int row = tabelaCarrinho.getSelectedRow();
-            if (row == -1) {
-                JOptionPane.showMessageDialog(null, "Selecione uma pizza na tabela para remover.");
-                return;
-            }
-            if (pedidoEmAndamento != null && row < pedidoEmAndamento.getPizzas().size()) {
-                Pizza p = pedidoEmAndamento.getPizzas().get(row);
-                pedidoEmAndamento.removerPizza(p);
-                atualizarCarrinho();
-            }
-        });
-
-        btnFinalizarSalvar.addActionListener(e -> {
-            if (pedidoEmAndamento == null || pedidoEmAndamento.getPizzas().isEmpty()) {
-                JOptionPane.showMessageDialog(null, "Adicione pelo menos uma pizza!");
-                return;
-            }
-
-            int linhaC = tabelaClientesBusca.getSelectedRow();
-            Cliente c = sistema.buscarClientePorTelefone(modeloTabelaClientes.getValueAt(linhaC, 0).toString());
-
-            if (pedidoEmEdicao != null) {
-                // Remove as pizzas antigas e adiciona as novas
-                for (Pizza antiga : pedidoEmEdicao.getPizzas()) {
-                    pedidoEmEdicao.removerPizza(antiga);
-                }
-                for (Pizza nova : pedidoEmAndamento.getPizzas()) {
-                    pedidoEmEdicao.adicionarPizza(nova);
-                }
-                JOptionPane.showMessageDialog(null, "Pedido atualizado com sucesso!");
-            } else {
-                c.adicionarPedido(pedidoEmAndamento);
-                JOptionPane.showMessageDialog(null, "Pedido criado com sucesso!");
-            }
-
-            pedidoEmEdicao = null;
-            pedidoEmAndamento = null;
-            painelPizza.setVisible(false);
-            pnlCarrinho.setVisible(false);
-            atualizarTabelaPedidos();
-            contentPane.revalidate();
-        });
+        btnEditarPizza.addActionListener(e -> controller.editarPizzaDoCarrinho(tabelaCarrinho.getSelectedRow()));
+        btnRemoverDaLista.addActionListener(e -> controller.removerPizzaDoCarrinho(tabelaCarrinho.getSelectedRow()));
+        btnFinalizarSalvar.addActionListener(e -> controller.finalizarOuSalvarPedido());
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -371,65 +222,66 @@ public class TelaPedidos extends JFrame {
                 if (telaClientesRef != null) telaClientesRef.atualizarTabela();
             }
         });
-        
-        pack(); // Ajusta janela após inicializar
+
+        pack();
     }
 
-    private void atualizarTabelaPedidos() {
-        modeloTabelaPedidos.setRowCount(0);
-        btnEditarPedido.setVisible(false);
-        btnExcluirPedido.setVisible(false);
-        
-        int linhaSelecionada = tabelaClientesBusca.getSelectedRow();
-        if (linhaSelecionada == -1) return;
+    public TelaPedidos(SistemaPizzaria sistema, TelaClientes telaClientes) {
+        this(telaClientes);
+    }
 
-        String tel = modeloTabelaClientes.getValueAt(linhaSelecionada, 0).toString();
-        Cliente c = sistema.buscarClientePorTelefone(tel);
-
-        if (c != null) {
-            for (Pedido p : c.getPedidos()) {
-                modeloTabelaPedidos.addRow(new Object[]{
-                    p.getIdentificador(),
-                    p.getPizzas().size(),
-                    String.format("R$ %.2f", p.getPrecoTotal()),
-                    p.getStatus()
-                });
-            }
+    public void selecionarPrimeiraLinhaCliente() {
+        if (modeloTabelaClientes.getRowCount() > 0) {
+            tabelaClientesBusca.setRowSelectionInterval(0, 0);
         }
     }
 
-    private void atualizarCarrinho() {
-        modeloCarrinho.setRowCount(0);
-        if (pedidoEmAndamento == null) {
-            lblPrecoTotal.setText("Preço Total: R$ 0,00");
-            return;
+    public void selecionarLinhaPedido(int row) {
+        if (row >= 0 && row < modeloTabelaPedidos.getRowCount()) {
+            tabelaPedidos.setRowSelectionInterval(row, row);
         }
-
-        for (Pizza pizza : pedidoEmAndamento.getPizzas()) {
-            String forma = pizza.getForma().getClass().getSimpleName();
-            double area = pizza.getForma().calcularArea();
-            
-            StringBuilder sabores = new StringBuilder();
-            for (int i = 0; i < pizza.getSabores().size(); i++) {
-                sabores.append(pizza.getSabores().get(i).getNome());
-                if (i < pizza.getSabores().size() - 1) sabores.append(", ");
-            }
-
-            modeloCarrinho.addRow(new Object[]{
-                forma,
-                String.format("%.2f cm²", area),
-                sabores.toString(),
-                String.format("R$ %.2f", pizza.calcularPreco())
-            });
-        }
-        
-        lblPrecoTotal.setText(String.format("Preço Total: R$ %.2f", pedidoEmAndamento.calcularPrecoTotal()));
     }
-    
+
+    public void exibirPainelMontagemECarrinho(boolean modoEdicaoPedido, Pizza pizzaInicialParaCarregar) {
+        btnFinalizarSalvar.setText(modoEdicaoPedido ? "Salvar Alterações" : "Finalizar Pedido");
+        painelPizza.limparFormulario();
+        if (pizzaInicialParaCarregar != null) {
+            painelPizza.carregarPizzaParaEdicao(pizzaInicialParaCarregar);
+        }
+        painelPizza.setVisible(true);
+        pnlCarrinho.setVisible(true);
+        contentPane.revalidate();
+    }
+
+    public void ocultarPainelMontagemECarrinho() {
+        painelPizza.setVisible(false);
+        pnlCarrinho.setVisible(false);
+        contentPane.revalidate();
+    }
+
+    public void carregarPizzaNoPainelMontagem(Pizza pizza) {
+        painelPizza.carregarPizzaParaEdicao(pizza);
+    }
+
+    public void atualizarLabelPrecoTotal(double valorTotal) {
+        lblPrecoTotal.setText(String.format("Preço Total: R$ %.2f", valorTotal));
+    }
+
     public void buscarClienteAutomaticamente(String telefone) {
         txtBusca.setText(telefone);
-        for (java.awt.event.ActionListener a : txtBusca.getActionListeners()) {
-            a.actionPerformed(new java.awt.event.ActionEvent(txtBusca, java.awt.event.ActionEvent.ACTION_PERFORMED, null));
-        }
+        controller.buscarClientePorTelefone(telefone);
+    }
+
+    public boolean confirmarAcao(String pergunta) {
+        int confirm = JOptionPane.showConfirmDialog(this, pergunta, "Confirmar", JOptionPane.YES_NO_OPTION);
+        return confirm == JOptionPane.YES_OPTION;
+    }
+
+    public void exibirSucesso(String mensagem) {
+        JOptionPane.showMessageDialog(this, mensagem, "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public void exibirAviso(String mensagem) {
+        JOptionPane.showMessageDialog(this, mensagem, "Aviso", JOptionPane.WARNING_MESSAGE);
     }
 }

@@ -1,32 +1,35 @@
 package sistemapizzaria;
 
 import java.awt.EventQueue;
+import java.sql.Connection;
+import javax.swing.JOptionPane;
 
+import sistemapizzaria.dao.ConnectionFactory;
 import sistemapizzaria.telas.TelaClientes;
 
 public class Aplicacao {
-	public static void main(String[] args) {
-		// SistemaPizzaria é o núcleo de dados da aplicação
-		// Todas as telas irão acessar o mesmo núcleo e irão compartilhar os mesmos dados
-
-        // Iniciar GUI na fila de eventos correta para evitar problemas de sincronização 
-        // devido os componentes não terem segurança de threads nativas
-        EventQueue.invokeLater(new Runnable() { 
+    public static void main(String[] args) {
+        EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    // Instancia o núcleo de dados da aplicação
-                    SistemaPizzaria sistema = new SistemaPizzaria();
-                    
-                    // Passa o sistema para a tela inicial
-                    TelaClientes telaInicial = new TelaClientes(sistema);
-                    
-                    // Centraliza a tela no monitor e a torna visível
+                    // Inicializa a conexão e garante a criação das tabelas no SQLite
+                    try (Connection con = ConnectionFactory.getConnection()) {
+                        // Banco inicializado com sucesso
+                    }
+
+                    TelaClientes telaInicial = new TelaClientes();
                     telaInicial.setLocationRelativeTo(null);
                     telaInicial.setVisible(true);
                 } catch (Exception e) {
                     e.printStackTrace();
+                    JOptionPane.showMessageDialog(
+                        null,
+                        "Erro ao inicializar o banco de dados: " + e.getMessage(),
+                        "Erro de Inicialização",
+                        JOptionPane.ERROR_MESSAGE
+                    );
                 }
             }
         });
-	}
+    }
 }
